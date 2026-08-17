@@ -12,7 +12,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
 
 // Initialize Database Tables Schema
 db.serialize(() => {
-  // 1. Users Table (Hardcoded user1 / user2)
+  // 1. Users Table
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       username TEXT PRIMARY KEY,
@@ -72,13 +72,16 @@ db.serialize(() => {
     )
   `);
 
-  // Seed default hardcoded accounts (user1 & user2)
+  // Seed default hardcoded accounts (admin, thanhthanh, nhuyen, user1, user2)
   const stmt = db.prepare(`INSERT OR IGNORE INTO users (username, password_hash, name, avatar, role) VALUES (?, ?, ?, ?, ?)`);
+  stmt.run('admin', '123456', 'Quản Trị Viên (Admin)', '👑', 'Admin');
+  stmt.run('thanhthanh', '123456', 'Thanh Thanh', '🌸', 'Personal');
+  stmt.run('nhuyen', '123456', 'Nhuyên', '💼', 'Work');
   stmt.run('user1', '123456', 'Nguyễn Văn A', '🏠', 'Personal');
   stmt.run('user2', '123456', 'Trần Thị B', '💼', 'Work');
   stmt.finalize();
 
-  console.log('✅ Database Tables & Initial Users Initialized!');
+  console.log('✅ Database Tables & All 5 Accounts (admin, thanhthanh, nhuyen, user1, user2) Initialized!');
 });
 
 module.exports = db;

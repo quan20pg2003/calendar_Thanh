@@ -1,6 +1,18 @@
 import { Task, User } from '../types';
 
 export const HARDCODED_USERS: Record<string, { user: User; passwordHash: string }> = {
+  admin: {
+    user: { username: 'admin', name: 'Quản Trị Viên (Admin)', avatar: '👑', role: 'Admin' },
+    passwordHash: '123456',
+  },
+  thanhthanh: {
+    user: { username: 'thanhthanh', name: 'Thanh Thanh', avatar: '🌸', role: 'Personal' },
+    passwordHash: '123456',
+  },
+  nhuyen: {
+    user: { username: 'nhuyen', name: 'Nhuyên', avatar: '💼', role: 'Work' },
+    passwordHash: '123456',
+  },
   user1: {
     user: { username: 'user1', name: 'Nguyễn Văn A (Lịch Cá Nhân)', avatar: '🏠', role: 'Personal' },
     passwordHash: '123456',

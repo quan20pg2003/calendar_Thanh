@@ -9,7 +9,7 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState('user1');
+  const [username, setUsername] = useState('thanhthanh');
   const [password, setPassword] = useState('123456');
   const [error, setError] = useState('');
 
@@ -36,18 +36,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-xs font-vietnam">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/30 backdrop-blur-xs font-jakarta">
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-md p-8 rounded-2xl border border-[#cce7f8] shadow-lg relative overflow-hidden bg-white text-slate-800"
+        className="w-full max-w-lg p-8 rounded-2xl border border-[#cce7f8] shadow-lg relative overflow-hidden bg-white text-slate-800"
       >
-        <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-[#1b98e0] rounded-2xl flex items-center justify-center mx-auto mb-4 text-white font-bold border border-[#1582c2] shadow-sm">
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 bg-[#1b98e0] rounded-2xl flex items-center justify-center mx-auto mb-3 text-white font-bold border border-[#1582c2] shadow-sm">
             <LogIn className="w-7 h-7 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Đăng Nhập ChronoPulse</h2>
-          <p className="text-sm text-[#0c6296] font-semibold mt-1">Lịch Biểu Cá Nhân • Tone Màu Xanh & Trắng</p>
+          <p className="text-sm text-[#0c6296] font-semibold mt-1">Lịch Biểu Cá Nhân • Hệ Thống Quản Lý Công Việc</p>
         </div>
 
         {error && (
@@ -72,7 +72,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Nhập username (e.g. user1)"
+                placeholder="Nhập username (e.g. admin, thanhthanh, nhuyen...)"
                 required
                 className="w-full pl-12 pr-4 py-3 glass-input rounded-xl text-sm focus:ring-2 focus:ring-[#1b98e0] transition-all font-semibold text-slate-900 border border-[#b8e1f7]"
               />
@@ -105,30 +105,43 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
           </button>
         </form>
 
-        {/* Quick selection of hardcoded accounts */}
-        <div className="mt-8 pt-6 border-t border-[#cce7f8] text-center">
-          <p className="text-xs text-[#0c6296] mb-3 font-semibold">Chọn nhanh tài khoản dùng thử:</p>
-          <div className="grid grid-cols-2 gap-3">
+        {/* Quick selection of accounts */}
+        <div className="mt-6 pt-5 border-t border-[#cce7f8] text-center">
+          <p className="text-xs text-[#0c6296] mb-3 font-semibold">Chọn nhanh tài khoản:</p>
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
-              onClick={() => handleQuickLogin('user1')}
-              className="p-3 bg-[#f0f8fd] hover:bg-[#e0f2fe] rounded-xl transition-all text-left flex items-center gap-3 border border-[#b8e1f7] group"
+              onClick={() => handleQuickLogin('admin')}
+              className="p-2.5 bg-[#f0f8fd] hover:bg-[#e0f2fe] rounded-xl transition-all text-left flex items-center gap-2 border border-[#b8e1f7] group"
             >
-              <span className="text-lg">🏠</span>
+              <span className="text-base">👑</span>
               <div>
-                <div className="text-xs font-extrabold text-slate-900 group-hover:text-[#1b98e0] transition-colors">user1</div>
-                <div className="text-[11px] text-[#0c6296] font-semibold">Lịch Cá Nhân</div>
+                <div className="text-xs font-extrabold text-slate-900 group-hover:text-[#1b98e0] transition-colors">admin</div>
+                <div className="text-[10px] text-[#0c6296] font-semibold">Admin</div>
               </div>
             </button>
+
             <button
               type="button"
-              onClick={() => handleQuickLogin('user2')}
-              className="p-3 bg-[#f0f8fd] hover:bg-[#e0f2fe] rounded-xl transition-all text-left flex items-center gap-3 border border-[#b8e1f7] group"
+              onClick={() => handleQuickLogin('thanhthanh')}
+              className="p-2.5 bg-[#f0f8fd] hover:bg-[#e0f2fe] rounded-xl transition-all text-left flex items-center gap-2 border border-[#b8e1f7] group"
             >
-              <span className="text-lg">💼</span>
+              <span className="text-base">🌸</span>
               <div>
-                <div className="text-xs font-extrabold text-slate-900 group-hover:text-[#1b98e0] transition-colors">user2</div>
-                <div className="text-[11px] text-[#0c6296] font-semibold">Lịch Công Việc</div>
+                <div className="text-xs font-extrabold text-slate-900 group-hover:text-[#1b98e0] transition-colors">thanhthanh</div>
+                <div className="text-[10px] text-[#0c6296] font-semibold">Cá nhân</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickLogin('nhuyen')}
+              className="p-2.5 bg-[#f0f8fd] hover:bg-[#e0f2fe] rounded-xl transition-all text-left flex items-center gap-2 border border-[#b8e1f7] group"
+            >
+              <span className="text-base">💼</span>
+              <div>
+                <div className="text-xs font-extrabold text-slate-900 group-hover:text-[#1b98e0] transition-colors">nhuyen</div>
+                <div className="text-[10px] text-[#0c6296] font-semibold">Công việc</div>
               </div>
             </button>
           </div>
