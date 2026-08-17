@@ -8,11 +8,24 @@ const API_BASE_URL =
     ? 'http://localhost:3001/api'
     : 'https://chronopulse-backend.onrender.com/api');
 
+const fetchWithTimeout = async (url: string, options: any = {}, timeoutMs = 2500) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (err) {
+    clearTimeout(id);
+    throw err;
+  }
+};
+
 export const api = {
   // Login Authentication (Module I)
   login: async (username: string, passwordHash: string): Promise<User> => {
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+      const res = await fetchWithTimeout(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password: passwordHash }),
@@ -29,7 +42,7 @@ export const api = {
   // Get Tasks for User & Date (Module II & VII)
   getTasks: async (username: string, date: string): Promise<Task[]> => {
     try {
-      const res = await fetch(`${API_BASE_URL}/tasks?username=${username}&date=${date}`);
+      const res = await fetchWithTimeout(`${API_BASE_URL}/tasks?username=${username}&date=${date}`);
       if (!res.ok) throw new Error('Failed to fetch tasks');
       return await res.json();
     } catch (err) {
@@ -41,7 +54,7 @@ export const api = {
   // Create Task (Module II, III, IV)
   createTask: async (task: Omit<Task, 'id'> & { id?: string; userUsername: string }): Promise<void> => {
     try {
-      await fetch(`${API_BASE_URL}/tasks`, {
+      await fetchWithTimeout(`${API_BASE_URL}/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(task),
@@ -54,7 +67,7 @@ export const api = {
   // Reschedule Task via Drag & Drop with Reason (Module V)
   rescheduleTask: async (taskId: string, newStart: string, newEnd: string, reason: string): Promise<void> => {
     try {
-      await fetch(`${API_BASE_URL}/tasks/${taskId}/reschedule`, {
+      await fetchWithTimeout(`${API_BASE_URL}/tasks/${taskId}/reschedule`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newStart, newEnd, reason }),
@@ -72,7 +85,7 @@ export const api = {
     delayReason?: string
   ): Promise<void> => {
     try {
-      await fetch(`${API_BASE_URL}/tasks/${taskId}/complete`, {
+      await fetchWithTimeout(`${API_BASE_URL}/tasks/${taskId}/complete`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ actualStart, actualEnd, delayReason }),
@@ -85,7 +98,7 @@ export const api = {
   // Log Pomodoro Focus Session (Module VI)
   logPomodoro: async (username: string, durationMinutes: number = 25): Promise<void> => {
     try {
-      await fetch(`${API_BASE_URL}/pomodoro/sessions`, {
+      await fetchWithTimeout(`${API_BASE_URL}/pomodoro/sessions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, durationMinutes }),
@@ -98,7 +111,7 @@ export const api = {
   // Delete Task
   deleteTask: async (taskId: string): Promise<void> => {
     try {
-      await fetch(`${API_BASE_URL}/tasks/${taskId}`, { method: 'DELETE' });
+      await fetchWithTimeout(`${API_BASE_URL}/tasks/${taskId}`, { method: 'DELETE' });
     } catch (err) {
       console.warn('API Offline:', err);
     }
