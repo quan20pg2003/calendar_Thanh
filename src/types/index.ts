@@ -16,6 +16,7 @@ export interface Task {
   actualEnd?: string;
   actualDuration?: number; // minutes
   delayReason?: string;
+  user_username?: string;
 }
 
 export interface User {
