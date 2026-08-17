@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body, button, input, select, textarea, h1, h2, h3, h4, h5, h6, span, p, div {
+  font-family: "Plus Jakarta Sans", Outfit, "Segoe UI", sans-serif !important;
+}
+
+@layer utilities {
+  .glass-panel {
+    background: #ffffff;
+    border: 1px solid #d0e8f7;
+    box-shadow: 0 4px 20px -5px rgba(27, 152, 224, 0.08);
+  }
+
+  .glass-card {
+    background: #ffffff;
+    border: 1px solid #e0f0fa;
+    box-shadow: 0 2px 8px -2px rgba(27, 152, 224, 0.05);
+  }
+
+  .glass-input {
+    background: #ffffff;
+    border: 1px solid #b8e1f7;
+    color: #0f172a;
+  }
+
+  .glass-input:focus {
+    outline: none;
+    border-color: #1b98e0;
+    box-shadow: 0 0 0 3px rgba(27, 152, 224, 0.2);
+  }
+}
+
+/* Custom Blue #1b98e0 Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f8fd;
+}
+::-webkit-scrollbar-thumb {
+  background: #99d5f7;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #1b98e0;
+}

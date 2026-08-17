@@ -1,0 +1,16 @@
+{
+  "name": "chronopulse-backend",
+  "version": "1.0.0",
+  "description": "Backend API Server cho ChronoPulse với SQLite Database",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "sqlite3": "^5.1.7"
+  }
+}

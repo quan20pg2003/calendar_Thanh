@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  chronopulse-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chronopulse_app
+    restart: always
+    ports:
+      - "5500:3001"
+    volumes:
+      - chronopulse_sqlite_data:/app/server
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+
+volumes:
+  chronopulse_sqlite_data:
+    driver: local
