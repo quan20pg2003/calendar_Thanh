@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { HARDCODED_USERS } from '../utils/storage';
+import { api } from '../utils/api';
 import { User } from '../types';
-import { Lock, User as UserIcon, LogIn, AlertCircle } from 'lucide-react';
+import { Lock, User as UserIcon, LogIn, AlertCircle, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface LoginModalProps {
@@ -9,29 +9,24 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
-  const [username, setUsername] = useState('thanhthanh');
-  const [password, setPassword] = useState('123456');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
-    const account = HARDCODED_USERS[username.trim()];
-    if (!account || account.passwordHash !== password) {
-      setError('Tên đăng nhập hoặc mật khẩu không chính xác!');
-      return;
-    }
-
-    onLoginSuccess(account.user);
-  };
-
-  const handleQuickLogin = (uname: string) => {
-    setUsername(uname);
-    setPassword('123456');
-    const account = HARDCODED_USERS[uname];
-    if (account) {
-      onLoginSuccess(account.user);
+    try {
+      // Authenticate directly against Supabase Cloud Database!
+      const loggedInUser = await api.login(username.trim(), password);
+      onLoginSuccess(loggedInUser);
+    } catch (err: any) {
+      setError(err.message || 'Tên đăng nhập hoặc mật khẩu không chính xác!');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -40,7 +35,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-lg p-8 rounded-2xl border border-[#cce7f8] shadow-lg relative overflow-hidden bg-white text-slate-800"
+        className="w-full max-w-md p-8 rounded-2xl border border-[#cce7f8] shadow-lg relative overflow-hidden bg-white text-slate-800"
       >
         <div className="text-center mb-6">
           <div className="w-14 h-14 bg-[#1b98e0] rounded-2xl flex items-center justify-center mx-auto mb-3 text-white font-bold border border-[#1582c2] shadow-sm">
@@ -72,7 +67,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Nhập username (e.g. admin, thanhthanh, nhuyen...)"
+                placeholder="Nhập tên đăng nhập của bạn"
                 required
                 className="w-full pl-12 pr-4 py-3 glass-input rounded-xl text-sm focus:ring-2 focus:ring-[#1b98e0] transition-all font-semibold text-slate-900 border border-[#b8e1f7]"
               />
@@ -89,7 +84,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Nhập mật khẩu (123456)"
+                placeholder="Nhập mật khẩu"
                 required
                 className="w-full pl-12 pr-4 py-3 glass-input rounded-xl text-sm focus:ring-2 focus:ring-[#1b98e0] transition-all font-semibold text-slate-900 border border-[#b8e1f7]"
               />
@@ -98,54 +93,22 @@ export const LoginModal: React.FC<LoginModalProps> = ({ onLoginSuccess }) => {
 
           <button
             type="submit"
-            className="w-full py-3.5 bg-[#1b98e0] hover:bg-[#1585c5] text-white font-bold rounded-xl shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm border-none mt-2"
+            disabled={loading}
+            className="w-full py-3.5 bg-[#1b98e0] hover:bg-[#1585c5] text-white font-bold rounded-xl shadow-xs transition-all active:scale-[0.98] flex items-center justify-center gap-2 text-sm border-none mt-4 disabled:opacity-70"
           >
-            <span>Vào Hệ Thống</span>
-            <LogIn className="w-4 h-4" />
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+                <span>Đang kết nối Supabase Cloud DB...</span>
+              </>
+            ) : (
+              <>
+                <span>Vào Hệ Thống</span>
+                <LogIn className="w-4 h-4" />
+              </>
+            )}
           </button>
         </form>
-
-        {/* Quick selection of accounts */}
-        <div className="mt-6 pt-5 border-t border-[#cce7f8] text-center">
-          <p className="text-xs text-[#0c6296] mb-3 font-semibold">Chọn nhanh tài khoản:</p>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('admin')}
-              className="p-2.5 bg-[#f0f8fd] hover:bg-[#e0f2fe] rounded-xl transition-all text-left flex items-center gap-2 border border-[#b8e1f7] group"
-            >
-              <span className="text-base">👑</span>
-              <div>
-                <div className="text-xs font-extrabold text-slate-900 group-hover:text-[#1b98e0] transition-colors">admin</div>
-                <div className="text-[10px] text-[#0c6296] font-semibold">Admin</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('thanhthanh')}
-              className="p-2.5 bg-[#f0f8fd] hover:bg-[#e0f2fe] rounded-xl transition-all text-left flex items-center gap-2 border border-[#b8e1f7] group"
-            >
-              <span className="text-base">🌸</span>
-              <div>
-                <div className="text-xs font-extrabold text-slate-900 group-hover:text-[#1b98e0] transition-colors">thanhthanh</div>
-                <div className="text-[10px] text-[#0c6296] font-semibold">Cá nhân</div>
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('nhuyen')}
-              className="p-2.5 bg-[#f0f8fd] hover:bg-[#e0f2fe] rounded-xl transition-all text-left flex items-center gap-2 border border-[#b8e1f7] group"
-            >
-              <span className="text-base">💼</span>
-              <div>
-                <div className="text-xs font-extrabold text-slate-900 group-hover:text-[#1b98e0] transition-colors">nhuyen</div>
-                <div className="text-[10px] text-[#0c6296] font-semibold">Công việc</div>
-              </div>
-            </button>
-          </div>
-        </div>
       </motion.div>
     </div>
   );
