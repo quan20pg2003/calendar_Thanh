@@ -1,6 +1,11 @@
 import { Task, User } from '../types';
 
-const API_BASE_URL = 'http://localhost:3001/api';
+// Dynamic API URL for Localhost & Production Render Backend
+const API_BASE_URL =
+  (import.meta.env.VITE_API_URL as string) ||
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3001/api'
+    : 'https://chronopulse-backend.onrender.com/api');
 
 export const api = {
   // Login Authentication (Module I)
