@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, ViewMode, FilterMode, Task } from './types';
 import { getStoredUser, setStoredUser, getTasksForDate, saveTasksForDate } from './utils/storage';
+import { api } from './utils/api';
 import { Header } from './components/Header';
 import { TimelineView } from './components/TimelineView';
 import { WeekView } from './components/WeekView';
@@ -10,6 +11,7 @@ import { TaskModal } from './components/TaskModal';
 import { ActualTimeModal } from './components/ActualTimeModal';
 import { PomodoroModal } from './components/PomodoroModal';
 import { NotebookLMWidget } from './components/NotebookLMWidget';
+import { AdminDashboard } from './components/AdminDashboard';
 import confetti from 'canvas-confetti';
 
 export function App() {
@@ -21,6 +23,9 @@ export function App() {
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  // Admin filter state (allows Admin to inspect any user's tasks or 'all')
+  const [activeUserFilter, setActiveUserFilter] = useState<string>('all');
+
   // Modals state
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -31,25 +36,39 @@ export function App() {
   const [isPomodoroOpen, setIsPomodoroOpen] = useState(false);
   const [isNotebookLMOpen, setIsNotebookLMOpen] = useState(false);
 
-  // Load tasks when user or selectedDate changes
+  // Load tasks when user or selectedDate or activeUserFilter changes
   useEffect(() => {
     if (user) {
-      const loaded = getTasksForDate(user.username, selectedDate);
-      setTasks(loaded);
+      const targetUser = user.role === 'Admin' && activeUserFilter !== 'all' ? activeUserFilter : user.username;
+      
+      // Attempt to load from API / Supabase Cloud DB first
+      api.getTasks(targetUser, selectedDate).then((remoteTasks) => {
+        if (remoteTasks && remoteTasks.length > 0) {
+          setTasks(remoteTasks);
+        } else {
+          // Fallback to local storage
+          const loaded = getTasksForDate(targetUser, selectedDate);
+          setTasks(loaded);
+        }
+      });
     }
-  }, [user, selectedDate]);
+  }, [user, selectedDate, activeUserFilter]);
 
   // Save tasks helper
   const updateTasks = (newTasks: Task[]) => {
     setTasks(newTasks);
     if (user) {
-      saveTasksForDate(user.username, selectedDate, newTasks);
+      const targetUser = user.role === 'Admin' && activeUserFilter !== 'all' ? activeUserFilter : user.username;
+      saveTasksForDate(targetUser, selectedDate, newTasks);
     }
   };
 
   const handleLogin = (newUser: User) => {
     setUser(newUser);
     setStoredUser(newUser);
+    if (newUser.role === 'Admin') {
+      setActiveUserFilter('all');
+    }
   };
 
   const handleLogout = () => {
@@ -79,36 +98,36 @@ export function App() {
     if (window.confirm('Bạn có chắc chắn muốn xóa công việc này?')) {
       const updated = tasks.filter((t) => t.id !== taskId);
       updateTasks(updated);
+      api.deleteTask(taskId);
     }
   };
 
   const handleSaveTask = (taskData: Omit<Task, 'id' | 'date'>, taskId?: string) => {
+    const targetUser = user && user.role === 'Admin' && activeUserFilter !== 'all' ? activeUserFilter : user?.username || 'admin';
+
     if (taskId) {
-      // Edit existing task
       const updated = tasks.map((t) => (t.id === taskId ? { ...t, ...taskData } : t));
       updateTasks(updated);
     } else {
-      // Add new task
+      const newId = `task-${Date.now()}`;
       const newTask: Task = {
-        id: `task-${Date.now()}`,
+        id: newId,
         date: selectedDate,
+        user_username: targetUser,
         ...taskData,
       };
       const updated = [...tasks, newTask];
       updateTasks(updated);
+      api.createTask({ ...taskData, id: newId, date: selectedDate, userUsername: targetUser });
     }
   };
 
   const handleToggleComplete = (task: Task) => {
     if (!task.completed) {
-      // Prompt actual time modal before marking completed (Requirement VIII)
       setCompletingTask(task);
       setIsActualTimeModalOpen(true);
     } else {
-      // Mark incomplete
-      const updated = tasks.map((t) =>
-        t.id === task.id ? { ...t, completed: false } : t
-      );
+      const updated = tasks.map((t) => (t.id === task.id ? { ...t, completed: false } : t));
       updateTasks(updated);
     }
   };
@@ -131,9 +150,9 @@ export function App() {
         : t
     );
     updateTasks(updated);
+    api.completeTask(completingTask.id, actualData.actualStart, actualData.actualEnd, actualData.delayReason);
     setCompletingTask(null);
 
-    // Confetti celebration
     confetti({
       particleCount: 70,
       spread: 50,
@@ -153,11 +172,15 @@ export function App() {
         : t
     );
     updateTasks(updated);
+    if (delayReason) {
+      api.rescheduleTask(taskId, newStart, newEnd, delayReason);
+    }
   };
 
   const handleImportNotebookLMTasks = (
     sampleTasks: Array<{ title: string; category: any; priority: any; startTime: string; endTime: string }>
   ) => {
+    const targetUser = user && user.role === 'Admin' && activeUserFilter !== 'all' ? activeUserFilter : user?.username || 'admin';
     const newTasks: Task[] = sampleTasks.map((st, idx) => ({
       id: `task-notebooklm-${Date.now()}-${idx}`,
       title: st.title,
@@ -167,18 +190,18 @@ export function App() {
       priority: st.priority,
       completed: false,
       date: selectedDate,
+      user_username: targetUser,
     }));
     updateTasks([...tasks, ...newTasks]);
   };
 
   return (
     <div className="min-h-screen bg-[#f0f8fd] p-4 md:p-8 text-slate-800 font-jakarta selection:bg-[#cbe8fa] selection:text-[#0b4d75]">
-      {/* Show Login Overlay if not logged in */}
       {!user ? (
         <LoginModal onLoginSuccess={handleLogin} />
       ) : (
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Daily Header */}
+          {/* Header Bar */}
           <Header
             user={user}
             onLogout={handleLogout}
@@ -193,6 +216,16 @@ export function App() {
             onOpenPomodoro={() => setIsPomodoroOpen(true)}
             onOpenNotebookLM={() => setIsNotebookLMOpen(true)}
           />
+
+          {/* ADMIN MANAGEMENT DASHBOARD SECTION */}
+          {user.role === 'Admin' && (
+            <AdminDashboard
+              currentUser={user}
+              selectedDate={selectedDate}
+              onSelectUserFilter={setActiveUserFilter}
+              activeUserFilter={activeUserFilter}
+            />
+          )}
 
           {/* View Switcher Content */}
           <main>
