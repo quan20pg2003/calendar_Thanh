@@ -12,6 +12,7 @@ import { ActualTimeModal } from './components/ActualTimeModal';
 import { PomodoroModal } from './components/PomodoroModal';
 import { NotebookLMWidget } from './components/NotebookLMWidget';
 import { AdminDashboard } from './components/AdminDashboard';
+import { AccountModal } from './components/AccountModal';
 import confetti from 'canvas-confetti';
 
 export function App() {
@@ -23,7 +24,7 @@ export function App() {
   const [filterMode, setFilterMode] = useState<FilterMode>('all');
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  // Admin filter state (allows Admin to inspect any user's tasks or 'all')
+  // Admin filter state
   const [activeUserFilter, setActiveUserFilter] = useState<string>('all');
 
   // Modals state
@@ -35,18 +36,17 @@ export function App() {
 
   const [isPomodoroOpen, setIsPomodoroOpen] = useState(false);
   const [isNotebookLMOpen, setIsNotebookLMOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
 
   // Load tasks when user or selectedDate or activeUserFilter changes
   useEffect(() => {
     if (user) {
       const targetUser = user.role === 'Admin' && activeUserFilter !== 'all' ? activeUserFilter : user.username;
       
-      // Attempt to load from API / Supabase Cloud DB first
       api.getTasks(targetUser, selectedDate).then((remoteTasks) => {
         if (remoteTasks && remoteTasks.length > 0) {
           setTasks(remoteTasks);
         } else {
-          // Fallback to local storage
           const loaded = getTasksForDate(targetUser, selectedDate);
           setTasks(loaded);
         }
@@ -74,6 +74,11 @@ export function App() {
   const handleLogout = () => {
     setUser(null);
     setStoredUser(null);
+  };
+
+  const handleUpdateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+    setStoredUser(updatedUser);
   };
 
   // Filter tasks based on filterMode
@@ -215,6 +220,7 @@ export function App() {
             onOpenAddTask={handleOpenAddTask}
             onOpenPomodoro={() => setIsPomodoroOpen(true)}
             onOpenNotebookLM={() => setIsNotebookLMOpen(true)}
+            onOpenAccountModal={() => setIsAccountModalOpen(true)}
           />
 
           {/* ADMIN MANAGEMENT DASHBOARD SECTION */}
@@ -285,6 +291,15 @@ export function App() {
             onClose={() => setIsNotebookLMOpen(false)}
             onImportTasks={handleImportNotebookLMTasks}
           />
+
+          {user && (
+            <AccountModal
+              isOpen={isAccountModalOpen}
+              onClose={() => setIsAccountModalOpen(false)}
+              currentUser={user}
+              onUpdateUser={handleUpdateUser}
+            />
+          )}
         </div>
       )}
     </div>
