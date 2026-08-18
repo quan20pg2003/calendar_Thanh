@@ -14,7 +14,6 @@ import {
   RefreshCw,
   AlertTriangle,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 interface AdminDashboardProps {
   currentUser: User;
@@ -51,7 +50,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch all users from Supabase Cloud DB
       const { data: usersData } = await supabase.from('users').select('*');
       if (usersData) {
         setUsersList(
@@ -66,13 +64,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         setUsersList([
           { username: 'thanhthanh', name: 'Thanh Thanh', avatar: '🌸', role: 'Personal' },
           { username: 'nhuyen', name: 'Nhuyên', avatar: '💼', role: 'Work' },
-          { username: 'admin', name: 'Quản Trị Viên (Admin)', avatar: '👑', role: 'Admin' },
+          { username: 'admin', name: 'Quản Trị Viên', avatar: '👑', role: 'Admin' },
           { username: 'user1', name: 'Nguyễn Văn A', avatar: '🏠', role: 'Personal' },
           { username: 'user2', name: 'Trần Thị B', avatar: '💼', role: 'Work' },
         ]);
       }
 
-      // 2. Fetch all tasks for selected date
       const { data: tasksData } = await supabase
         .from('tasks')
         .select('*')
@@ -99,7 +96,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         );
       }
 
-      // 3. Fetch reschedule logs
       const { data: logsData } = await supabase
         .from('reschedule_logs')
         .select('*')
@@ -120,7 +116,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     fetchAdminData();
   }, [selectedDate]);
 
-  // Compute analytics
   const totalTasks = allTasks.length;
   const completedTasks = allTasks.filter((t) => t.completed).length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -132,7 +127,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return matchesUser && matchesSearch;
   });
 
-  // Calculate delay severity color status for each user
   const getUserDelayStatus = (username: string) => {
     const userTasks = allTasks.filter((t) => t.user_username === username);
     const userReschedules = rescheduleLogs.filter((l) => l.user_username === username);
@@ -143,7 +137,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     if (totalDelays === 0) {
       return {
         level: 'good',
-        label: '🟢 Đúng tiến độ (0 lần trì hoãn)',
+        label: '🟢 Đúng tiến độ - 0 lần trì hoãn',
         cardBg: 'bg-emerald-50/70 border-emerald-200 text-emerald-900',
         badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
         progressColor: 'bg-emerald-500',
@@ -152,7 +146,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     } else if (totalDelays <= 2) {
       return {
         level: 'warning',
-        label: `🟡 Cần lưu ý (${totalDelays} lần trì hoãn)`,
+        label: `🟡 Cần lưu ý - ${totalDelays} lần trì hoãn`,
         cardBg: 'bg-amber-50/70 border-amber-200 text-amber-900',
         badgeBg: 'bg-amber-100 text-amber-900 border-amber-300 font-bold',
         progressColor: 'bg-amber-500',
@@ -161,7 +155,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     } else {
       return {
         level: 'critical',
-        label: `🔴 Trì hoãn nhiều (${totalDelays} lần trì hoãn)`,
+        label: `🔴 Trì hoãn nhiều - ${totalDelays} lần trì hoãn`,
         cardBg: 'bg-rose-50/70 border-rose-300 text-rose-900',
         badgeBg: 'bg-rose-100 text-rose-900 border-rose-400 font-extrabold shadow-xs',
         progressColor: 'bg-rose-600',
@@ -180,13 +174,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-extrabold text-slate-900">Giám Sát Tài Khoản & Mức Độ Trì Hoãn</h2>
+              <h2 className="text-lg font-extrabold text-slate-900">Giám Sát Tài Khoản Và Mức Độ Trì Hoãn</h2>
               <span className="bg-[#e0f2fe] text-[#0c6296] text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-[#b8e1f7]">
-                Quyền Hạn Admin
+                Quyền Quản Trị
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5 font-medium">
-              Theo dõi số lượng công việc, tần suất đổi lịch & sắc màu cảnh báo từ Xanh 🟢 sang Vàng 🟡 sang Đỏ 🔴.
+              Theo dõi toàn bộ công việc, tỷ lệ hoàn thành và lý do đổi lịch của tất cả các tài khoản hệ thống.
             </p>
           </div>
         </div>
@@ -229,7 +223,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
           <div>
             <div className="text-xs text-emerald-800 font-bold">Tỷ Lệ Hoàn Thành</div>
-            <div className="text-xl font-extrabold text-emerald-900">{completionRate}% ({completedTasks}/{totalTasks})</div>
+            <div className="text-xl font-extrabold text-emerald-900">{completionRate}% • {completedTasks} trên {totalTasks}</div>
           </div>
         </div>
 
@@ -255,7 +249,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
-            👥 Danh Sách Tài Khoản & Mức Độ Trì Hoãn (Xanh ➔ Đỏ)
+            👥 Danh Sách Tài Khoản Và Mức Độ Trì Hoãn
           </button>
           <button
             onClick={() => setActiveTab('overview')}
@@ -275,7 +269,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
-            ⚠️ Nhật Ký Đổi Lịch ({totalRescheduleCount})
+            ⚠️ Nhật Ký Đổi Lịch • {totalRescheduleCount} lượt
           </button>
         </div>
 
@@ -288,30 +282,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             onChange={(e) => onSelectUserFilter(e.target.value)}
             className="px-3 py-1.5 rounded-xl border border-[#b8e1f7] bg-[#f0f8fd] text-xs font-bold text-slate-800 focus:ring-2 focus:ring-[#1b98e0]"
           >
-            <option value="all">🌐 Tất cả tài khoản ({allTasks.length} công việc)</option>
-            <option value="thanhthanh">🌸 thanhthanh (Thanh Thanh)</option>
-            <option value="nhuyen">💼 nhuyen (Nhuyên)</option>
-            <option value="admin">👑 admin (Quản Trị Viên)</option>
-            <option value="user1">🏠 user1 (Nguyễn Văn A)</option>
-            <option value="user2">💼 user2 (Trần Thị B)</option>
+            <option value="all">🌐 Tất cả tài khoản • {allTasks.length} công việc</option>
+            <option value="thanhthanh">🌸 thanhthanh • Thanh Thanh</option>
+            <option value="nhuyen">💼 nhuyen • Nhuyên</option>
+            <option value="admin">👑 admin • Quản Trị Viên</option>
+            <option value="user1">🏠 user1 • Nguyễn Văn A</option>
+            <option value="user2">💼 user2 • Trần Thị B</option>
           </select>
         </div>
       </div>
 
-      {/* TAB 1: ACCOUNTS LIST WITH DYNAMIC DELAY COLOR STATUS (GREEN -> YELLOW -> RED) */}
+      {/* TAB 1: ACCOUNTS LIST WITH DYNAMIC DELAY COLOR STATUS */}
       {activeTab === 'usersList' && (
         <div className="space-y-4">
           <div className="p-4 bg-[#f0f8fd] rounded-xl border border-[#b8e1f7] flex items-center justify-between gap-4 text-xs font-semibold text-slate-800">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-[#0c6296]">Chú thích màu mức độ trì hoãn:</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-[#0c6296]">Mức độ trì hoãn:</span>
               <span className="px-2 py-1 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
                 🟢 0 lần: Đúng tiến độ
               </span>
               <span className="px-2 py-1 rounded bg-amber-100 text-amber-900 border border-amber-300 font-bold">
-                🟡 1-2 lần: Cần chú ý
+                🟡 1 đến 2 lần: Cần chú ý
               </span>
               <span className="px-2 py-1 rounded bg-rose-100 text-rose-900 border border-rose-300 font-extrabold">
-                🔴 3+ lần: Trì hoãn nhiều (Cảnh báo đỏ)
+                🔴 Trên 3 lần: Trì hoãn nhiều
               </span>
             </div>
           </div>
@@ -329,7 +323,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className={`p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-xs ${status.cardBg}`}
                 >
                   <div>
-                    {/* Header Account Info */}
                     <div className="flex items-start justify-between mb-3 gap-2">
                       <div className="flex items-center gap-3">
                         <span className="text-3xl">{u.avatar}</span>
@@ -343,14 +336,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </span>
                     </div>
 
-                    {/* Delay Severity Color Badge */}
                     <div className="mt-3 mb-4">
                       <span className={`text-xs px-3 py-1.5 rounded-xl border flex items-center gap-1.5 w-fit ${status.badgeBg}`}>
                         <span>{status.label}</span>
                       </span>
                     </div>
 
-                    {/* Task Counts Summary */}
                     <div className="space-y-2 pt-3 border-t border-[#cce7f8]">
                       <div className="flex justify-between text-xs text-slate-700 font-semibold">
                         <span>Số lượng công việc hôm nay:</span>
@@ -358,16 +349,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
                       <div className="flex justify-between text-xs text-slate-700 font-semibold">
                         <span>Đã hoàn thành:</span>
-                        <span className="font-bold text-emerald-700">{userDone} / {userTasks.length} ({pct}%)</span>
+                        <span className="font-bold text-emerald-700">{userDone} trên {userTasks.length} • {pct}%</span>
                       </div>
                       <div className="flex justify-between text-xs text-slate-700 font-semibold">
-                        <span>Số lần trì hoãn / đổi giờ:</span>
+                        <span>Số lần trì hoãn hoặc đổi giờ:</span>
                         <span className={`font-bold ${status.delayCount > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
                           {status.delayCount} lần
                         </span>
                       </div>
 
-                      {/* Progress Bar */}
                       <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-[#b8e1f7] mt-2">
                         <div
                           className={`h-full transition-all ${status.progressColor}`}
@@ -400,12 +390,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm kiếm công việc bất kỳ tài khoản nào..."
+                placeholder="Tìm kiếm công việc bất kỳ..."
                 className="w-full pl-9 pr-4 py-2 bg-[#f0f8fd] border border-[#b8e1f7] rounded-xl text-xs font-semibold focus:ring-2 focus:ring-[#1b98e0]"
               />
             </div>
             <div className="text-xs text-slate-500 font-medium">
-              Đang hiển thị {filteredTasks.length} / {allTasks.length} công việc
+              Đang hiển thị {filteredTasks.length} trên tổng số {allTasks.length} công việc
             </div>
           </div>
 
@@ -416,9 +406,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <th className="p-3">Tài Khoản</th>
                   <th className="p-3">Tên Công Việc</th>
                   <th className="p-3">Khung Giờ Đăng Ký</th>
-                  <th className="p-3">Nhóm / Ưu Tiên</th>
+                  <th className="p-3">Nhóm Và Ưu Tiên</th>
                   <th className="p-3">Trạng Thái</th>
-                  <th className="p-3">Ghi Chú / Lý Do Trì Hoãn</th>
+                  <th className="p-3">Ghi Chú Và Lý Do Trì Hoãn</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#cce7f8]">
@@ -437,12 +427,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <tr key={t.id} className="hover:bg-[#f0f8fd]/50 transition-colors">
                         <td className="p-3 font-bold text-slate-900 flex items-center gap-2">
                           <span className="px-2 py-1 bg-white border border-[#b8e1f7] rounded font-mono text-[11px] text-[#0c6296]">
-                            {t.user_username || 'system'}
+                            {t.user_username || 'hệ thống'}
                           </span>
                         </td>
                         <td className="p-3 font-bold text-slate-800">{t.title}</td>
                         <td className="p-3 font-mono font-semibold text-[#0c6296]">
-                          {t.startTime} - {t.endTime}
+                          {t.startTime} đến {t.endTime}
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-1.5">
@@ -469,11 +459,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <td className="p-3 text-slate-600">
                           {t.delayReason ? (
                             <span className="text-amber-800 bg-amber-50 px-2 py-1 rounded text-[11px] border border-amber-200 block max-w-xs truncate">
-                              ⚠️ {t.delayReason}
+                              ⚠️ Lý do: {t.delayReason}
                             </span>
                           ) : t.actualStart ? (
                             <span className="text-emerald-800 bg-emerald-50 px-2 py-1 rounded text-[11px] border border-emerald-200">
-                              ⏱️ Thực tế: {t.actualStart} - {t.actualEnd} ({t.actualDuration}m)
+                              ⏱️ Thực tế từ {t.actualStart} đến {t.actualEnd} • {t.actualDuration} phút
                             </span>
                           ) : (
                             <span className="text-slate-400 italic">Đang đúng tiến độ</span>
@@ -505,9 +495,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <tr>
                   <th className="p-3">Thời Gian Thao Tác</th>
                   <th className="p-3">Tài Khoản</th>
-                  <th className="p-3">Giờ Ban Đầu (Cũ)</th>
-                  <th className="p-3">Giờ Chuyển Sang (Mới)</th>
-                  <th className="p-3">Lý Do Đổi Lịch Chấm Bắt Bắt</th>
+                  <th className="p-3">Giờ Ban Đầu Cũ</th>
+                  <th className="p-3">Giờ Chuyển Sang Mới</th>
+                  <th className="p-3">Lý Do Đổi Lịch Bắt Bắt</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#cce7f8]">

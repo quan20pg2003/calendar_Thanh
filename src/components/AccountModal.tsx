@@ -37,7 +37,6 @@ export const AccountModal: React.FC<AccountModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Handle Profile Update (Change Name & Avatar)
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -51,7 +50,6 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         return;
       }
 
-      // Update in Supabase Cloud DB
       const { error: dbError } = await supabase
         .from('users')
         .update({
@@ -77,7 +75,6 @@ export const AccountModal: React.FC<AccountModalProps> = ({
     }
   };
 
-  // Handle Password Update (Change Password)
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -103,7 +100,6 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         return;
       }
 
-      // Check current password from Supabase
       const { data: dbUser } = await supabase
         .from('users')
         .select('*')
@@ -116,7 +112,6 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         return;
       }
 
-      // Update password in Supabase Cloud DB
       const { error: dbError } = await supabase
         .from('users')
         .update({
@@ -199,7 +194,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
             }`}
           >
             <UserIcon className="w-3.5 h-3.5" />
-            <span>Thông Tin Cá Nhân (Đổi Tên)</span>
+            <span>Đổi Tên Hiển Thị</span>
           </button>
 
           <button
@@ -216,7 +211,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
             }`}
           >
             <KeyRound className="w-3.5 h-3.5" />
-            <span>Bảo Mật (Đổi Mật Khẩu)</span>
+            <span>Đổi Mật Khẩu</span>
           </button>
         </div>
 
@@ -224,7 +219,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
         {activeTab === 'profile' && (
           <form onSubmit={handleUpdateProfile} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-[#0c6296] mb-1">Tên đăng nhập (Username)</label>
+              <label className="block text-xs font-bold text-[#0c6296] mb-1">Tên đăng nhập hệ thống</label>
               <input
                 type="text"
                 disabled
@@ -246,7 +241,7 @@ export const AccountModal: React.FC<AccountModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-[#0c6296] mb-2">Chọn Biểu Tượng Đại Diện</label>
+              <label className="block text-xs font-bold text-[#0c6296] mb-2">Biểu Tượng Đại Diện</label>
               <div className="flex flex-wrap gap-2 p-3 bg-[#f0f8fd] rounded-xl border border-[#b8e1f7]">
                 {AVATAR_OPTIONS.map((opt) => (
                   <button

@@ -143,7 +143,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Task Title (Tên công việc - dạng Aa) */}
           <div>
             <label className="block text-sm font-bold text-slate-800 mb-2">
               Tên công việc *
@@ -152,13 +151,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Nhập tên công việc (e.g. Học tiếng Nhật, Họp dự án...)"
+              placeholder="Nhập tên công việc"
               required
               className="w-full px-4 py-3 glass-input rounded-xl text-sm focus:ring-2 focus:ring-[#1b98e0] transition-all font-semibold text-slate-800 border border-[#b8e1f7]"
             />
           </div>
 
-          {/* Start and End Time (Bắt đầu & Kết thúc - dạng Aa) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-bold text-slate-800 mb-2 flex items-center gap-1">
@@ -197,7 +195,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             </div>
           </div>
 
-          {/* 6 Categories Selection (Phân loại nhóm công việc - dạng Aa) */}
           <div>
             <label className="block text-sm font-bold text-slate-800 mb-2">
               Phân loại nhóm công việc *
@@ -225,7 +222,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             </div>
           </div>
 
-          {/* 4 Eisenhower Priorities Selection (Mức độ ưu tiên - dạng Aa) */}
           <div>
             <label className="block text-sm font-bold text-slate-800 mb-2">
               Mức độ ưu tiên *
@@ -252,7 +248,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             </div>
           </div>
 
-          {/* Recurring Schedule Days Selector (Lặp lại lịch theo ngày - dạng Aa) */}
           <div>
             <label className="block text-sm font-bold text-slate-800 mb-2 flex items-center gap-1">
               <Calendar className="w-4 h-4 text-[#1b98e0]" />
@@ -279,7 +274,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             </div>
           </div>
 
-          {/* Action Buttons (Đã BỎ TICK ICON trên button Lưu Công Việc) */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#cce7f8]">
             <button
               type="button"

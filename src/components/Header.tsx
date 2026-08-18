@@ -61,7 +61,6 @@ export const Header: React.FC<HeaderProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -144,7 +143,7 @@ export const Header: React.FC<HeaderProps> = ({
                         className="w-full px-3 py-2.5 rounded-xl hover:bg-[#f0f8fd] text-slate-800 hover:text-[#1b98e0] font-bold text-xs flex items-center gap-2.5 transition-all text-left"
                       >
                         <Settings className="w-4 h-4 text-[#1b98e0]" />
-                        <span>⚙️ Quản Lý Tài Khoản (Đổi Tên/Mật Khẩu)</span>
+                        <span>⚙️ Quản Lý Tài Khoản</span>
                       </button>
 
                       <button
@@ -199,7 +198,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenAccountModal}
               className="px-3 py-2 rounded-xl bg-[#f0f8fd] hover:bg-[#e0f2fe] text-[#0c6296] border border-[#b8e1f7] transition-all flex items-center gap-1.5 text-xs font-bold"
-              title="Quản lý tài khoản (Đổi tên / Mật khẩu)"
+              title="Quản lý tài khoản"
             >
               <Settings className="w-4 h-4 text-[#1b98e0]" />
               <span className="hidden md:inline">Quản Lý Tài Khoản</span>
@@ -216,7 +215,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>Tiến Độ Công Việc Hôm Nay</span>
               </div>
               <span className="text-sm font-extrabold text-[#0c6296]">
-                {completedTasks} / {totalTasks} Công việc ({progressPercent}%)
+                {completedTasks} trên {totalTasks} công việc • {progressPercent}%
               </span>
             </div>
             <div className="w-full h-3 bg-[#e6f4fc] rounded-full overflow-hidden p-0.5 border border-[#b8e1f7]">
@@ -239,7 +238,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenPomodoro}
               className="py-3 px-4 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold rounded-xl border border-amber-200 transition-all flex items-center justify-center gap-2 text-sm active:scale-95"
-              title="Chế độ tập trung Pomodoro 25m"
+              title="Chế độ tập trung Pomodoro 25 phút"
             >
               <Timer className="w-5 h-5 text-amber-600" />
               <span className="hidden sm:inline">Pomodoro</span>
@@ -302,7 +301,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => onFilterModeChange('all')}
               className={`px-2.5 py-1 rounded-lg transition-all ${
                 filterMode === 'all'
-                  ? 'bg-[#1b98e0] text-white font-extrabold shadow-xs'
+                  ? 'bg-[#1b98e0] text-[#ffffff] font-extrabold shadow-xs'
                   : 'text-[#0c6296] hover:text-[#063958]'
               }`}
             >
@@ -312,7 +311,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => onFilterModeChange('completed')}
               className={`px-2.5 py-1 rounded-lg transition-all ${
                 filterMode === 'completed'
-                  ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                  ? 'bg-emerald-600 text-[#ffffff] font-bold shadow-xs'
                   : 'text-[#0c6296] hover:text-[#063958]'
               }`}
             >
@@ -322,7 +321,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => onFilterModeChange('incomplete')}
               className={`px-2.5 py-1 rounded-lg transition-all ${
                 filterMode === 'incomplete'
-                  ? 'bg-amber-600 text-white font-bold shadow-xs'
+                  ? 'bg-amber-600 text-[#ffffff] font-bold shadow-xs'
                   : 'text-[#0c6296] hover:text-[#063958]'
               }`}
             >

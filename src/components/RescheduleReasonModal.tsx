@@ -68,11 +68,11 @@ export const RescheduleReasonModal: React.FC<RescheduleReasonModalProps> = ({
           <div className="flex items-center gap-4 text-slate-700 font-medium pt-1">
             <span className="line-through text-slate-500 flex items-center gap-1">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
-              Cũ: {task.startTime} - {task.endTime}
+              Khung giờ cũ: {task.startTime} đến {task.endTime}
             </span>
             <span className="text-[#0c6296] font-bold flex items-center gap-1">
               <Clock className="w-3.5 h-3.5 text-[#1b98e0]" />
-              Mới: {proposedStart} - {proposedEnd}
+              Khung giờ mới: {proposedStart} đến {proposedEnd}
             </span>
           </div>
         </div>
@@ -93,7 +93,7 @@ export const RescheduleReasonModal: React.FC<RescheduleReasonModalProps> = ({
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Nhập lý do thay đổi thời gian (ví dụ: Kẹt xe, Họp đột xuất, Đổi lịch hẹn khách hàng...)"
+              placeholder="Nhập lý do thay đổi thời gian"
               rows={3}
               required
               className="w-full px-4 py-3 glass-input rounded-xl text-sm focus:ring-2 focus:ring-[#1b98e0] font-semibold text-slate-800 border border-[#b8e1f7]"
