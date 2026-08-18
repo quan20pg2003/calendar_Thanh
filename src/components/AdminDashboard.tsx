@@ -12,6 +12,7 @@ import {
   Search,
   ShieldCheck,
   RefreshCw,
+  AlertTriangle,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -43,7 +44,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [rescheduleLogs, setRescheduleLogs] = useState<RescheduleLogItem[]>([]);
   const [usersList, setUsersList] = useState<User[]>([]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'rescheduleLogs' | 'usersList'>('overview');
+  const [activeTab, setActiveTab] = useState<'usersList' | 'overview' | 'rescheduleLogs'>('usersList');
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -62,7 +63,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           }))
         );
       } else {
-        // Fallback default list
         setUsersList([
           { username: 'thanhthanh', name: 'Thanh Thanh', avatar: '🌸', role: 'Personal' },
           { username: 'nhuyen', name: 'Nhuyên', avatar: '💼', role: 'Work' },
@@ -104,7 +104,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         .from('reschedule_logs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(30);
+        .limit(50);
 
       if (logsData) {
         setRescheduleLogs(logsData);
@@ -132,6 +132,44 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return matchesUser && matchesSearch;
   });
 
+  // Calculate delay severity color status for each user
+  const getUserDelayStatus = (username: string) => {
+    const userTasks = allTasks.filter((t) => t.user_username === username);
+    const userReschedules = rescheduleLogs.filter((l) => l.user_username === username);
+    const userDelayTasks = userTasks.filter((t) => Boolean(t.delayReason));
+
+    const totalDelays = userReschedules.length + userDelayTasks.length;
+
+    if (totalDelays === 0) {
+      return {
+        level: 'good',
+        label: '🟢 Đúng tiến độ (0 lần trì hoãn)',
+        cardBg: 'bg-emerald-50/70 border-emerald-200 text-emerald-900',
+        badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        progressColor: 'bg-emerald-500',
+        delayCount: 0,
+      };
+    } else if (totalDelays <= 2) {
+      return {
+        level: 'warning',
+        label: `🟡 Cần lưu ý (${totalDelays} lần trì hoãn)`,
+        cardBg: 'bg-amber-50/70 border-amber-200 text-amber-900',
+        badgeBg: 'bg-amber-100 text-amber-900 border-amber-300 font-bold',
+        progressColor: 'bg-amber-500',
+        delayCount: totalDelays,
+      };
+    } else {
+      return {
+        level: 'critical',
+        label: `🔴 Trì hoãn nhiều (${totalDelays} lần trì hoãn)`,
+        cardBg: 'bg-rose-50/70 border-rose-300 text-rose-900',
+        badgeBg: 'bg-rose-100 text-rose-900 border-rose-400 font-extrabold shadow-xs',
+        progressColor: 'bg-rose-600',
+        delayCount: totalDelays,
+      };
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl border border-[#cce7f8] p-6 shadow-sm mb-6 font-jakarta">
       {/* Admin Title Header */}
@@ -142,13 +180,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-extrabold text-slate-900">Bảng Quản Lý Admin (Executive Oversight)</h2>
+              <h2 className="text-lg font-extrabold text-slate-900">Giám Sát Tài Khoản & Mức Độ Trì Hoãn</h2>
               <span className="bg-[#e0f2fe] text-[#0c6296] text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-[#b8e1f7]">
-                Quyền Hạn Cao Cấp
+                Quyền Hạn Admin
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5 font-medium">
-              Theo dõi toàn bộ công việc, tỷ lệ hoàn thành & lý do đổi lịch của tất cả các tài khoản (`thanhthanh`, `nhuyen`, ...).
+              Theo dõi số lượng công việc, tần suất đổi lịch & sắc màu cảnh báo từ Xanh 🟢 sang Vàng 🟡 sang Đỏ 🔴.
             </p>
           </div>
         </div>
@@ -195,20 +233,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-white border border-amber-300 flex items-center justify-center text-amber-600">
-            <AlertCircle className="w-5 h-5" />
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-white border border-rose-300 flex items-center justify-center text-rose-600">
+            <AlertTriangle className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-xs text-amber-800 font-bold">Lượt Đổi Lịch Khung Giờ</div>
-            <div className="text-xl font-extrabold text-amber-900">{totalRescheduleCount}</div>
+            <div className="text-xs text-rose-800 font-bold">Tổng Số Lượt Trì Hoãn</div>
+            <div className="text-xl font-extrabold text-rose-900">{totalRescheduleCount}</div>
           </div>
         </div>
       </div>
 
-      {/* Admin Tab Switcher & User Filter Controls */}
+      {/* Admin Tab Switcher Controls */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#cce7f8] mb-6">
         <div className="flex items-center gap-2 bg-[#f0f8fd] p-1 rounded-xl border border-[#cce7f8]">
+          <button
+            onClick={() => setActiveTab('usersList')}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'usersList'
+                ? 'bg-[#1b98e0] text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+            }`}
+          >
+            👥 Danh Sách Tài Khoản & Mức Độ Trì Hoãn (Xanh ➔ Đỏ)
+          </button>
           <button
             onClick={() => setActiveTab('overview')}
             className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
@@ -217,7 +265,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
-            📊 Giám Sát Công Việc Các Tài Khoản
+            📊 Chi Tiết Công Việc Các Tài Khoản
           </button>
           <button
             onClick={() => setActiveTab('rescheduleLogs')}
@@ -227,17 +275,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
-            ⚠️ Nhật Ký Đổi Lịch & Lý Do Trì Hoãn ({totalRescheduleCount})
-          </button>
-          <button
-            onClick={() => setActiveTab('usersList')}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'usersList'
-                ? 'bg-[#1b98e0] text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
-            }`}
-          >
-            👥 Danh Sách Tài Khoản Hệ Thống
+            ⚠️ Nhật Ký Đổi Lịch ({totalRescheduleCount})
           </button>
         </div>
 
@@ -260,7 +298,99 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       </div>
 
-      {/* TAB 1: OVERVIEW ALL USER TASKS */}
+      {/* TAB 1: ACCOUNTS LIST WITH DYNAMIC DELAY COLOR STATUS (GREEN -> YELLOW -> RED) */}
+      {activeTab === 'usersList' && (
+        <div className="space-y-4">
+          <div className="p-4 bg-[#f0f8fd] rounded-xl border border-[#b8e1f7] flex items-center justify-between gap-4 text-xs font-semibold text-slate-800">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#0c6296]">Chú thích màu mức độ trì hoãn:</span>
+              <span className="px-2 py-1 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
+                🟢 0 lần: Đúng tiến độ
+              </span>
+              <span className="px-2 py-1 rounded bg-amber-100 text-amber-900 border border-amber-300 font-bold">
+                🟡 1-2 lần: Cần chú ý
+              </span>
+              <span className="px-2 py-1 rounded bg-rose-100 text-rose-900 border border-rose-300 font-extrabold">
+                🔴 3+ lần: Trì hoãn nhiều (Cảnh báo đỏ)
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {usersList.map((u) => {
+              const userTasks = allTasks.filter((t) => t.user_username === u.username);
+              const userDone = userTasks.filter((t) => t.completed).length;
+              const pct = userTasks.length > 0 ? Math.round((userDone / userTasks.length) * 100) : 0;
+              const status = getUserDelayStatus(u.username);
+
+              return (
+                <div
+                  key={u.username}
+                  className={`p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-xs ${status.cardBg}`}
+                >
+                  <div>
+                    {/* Header Account Info */}
+                    <div className="flex items-start justify-between mb-3 gap-2">
+                      <div className="flex items-center gap-3">
+                        <span className="text-3xl">{u.avatar}</span>
+                        <div>
+                          <div className="font-extrabold text-slate-900 text-base">{u.name}</div>
+                          <div className="text-xs text-[#0c6296] font-mono font-bold">@{u.username}</div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 bg-white border border-[#b8e1f7] text-[#0c6296] rounded font-bold">
+                        {u.role}
+                      </span>
+                    </div>
+
+                    {/* Delay Severity Color Badge */}
+                    <div className="mt-3 mb-4">
+                      <span className={`text-xs px-3 py-1.5 rounded-xl border flex items-center gap-1.5 w-fit ${status.badgeBg}`}>
+                        <span>{status.label}</span>
+                      </span>
+                    </div>
+
+                    {/* Task Counts Summary */}
+                    <div className="space-y-2 pt-3 border-t border-[#cce7f8]">
+                      <div className="flex justify-between text-xs text-slate-700 font-semibold">
+                        <span>Số lượng công việc hôm nay:</span>
+                        <span className="font-extrabold text-slate-900">{userTasks.length} công việc</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-700 font-semibold">
+                        <span>Đã hoàn thành:</span>
+                        <span className="font-bold text-emerald-700">{userDone} / {userTasks.length} ({pct}%)</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-700 font-semibold">
+                        <span>Số lần trì hoãn / đổi giờ:</span>
+                        <span className={`font-bold ${status.delayCount > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+                          {status.delayCount} lần
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-[#b8e1f7] mt-2">
+                        <div
+                          className={`h-full transition-all ${status.progressColor}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => onSelectUserFilter(u.username)}
+                    className="w-full mt-5 py-2.5 bg-white hover:bg-[#e0f2fe] text-[#0c6296] font-bold text-xs rounded-xl border border-[#b8e1f7] transition-all text-center active:scale-95 shadow-xs"
+                  >
+                    Xem chi tiết lịch biểu của @{u.username}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: OVERVIEW ALL USER TASKS */}
       {activeTab === 'overview' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-4">
@@ -359,11 +489,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </div>
       )}
 
-      {/* TAB 2: RESCHEDULE AUDIT LOGS */}
+      {/* TAB 3: RESCHEDULE AUDIT LOGS */}
       {activeTab === 'rescheduleLogs' && (
         <div className="space-y-4">
-          <div className="p-4 bg-amber-50 rounded-xl border border-amber-200 flex items-center gap-3 text-amber-900 text-xs font-semibold">
-            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <div className="p-4 bg-rose-50 rounded-xl border border-rose-200 flex items-center gap-3 text-rose-900 text-xs font-semibold">
+            <AlertTriangle className="w-5 h-5 text-rose-600 flex-shrink-0" />
             <span>
               Nhật ký ghi vết toàn bộ hành vi kéo thả thay đổi giờ công việc của người dùng trên lịch 24h kèm theo lý do bắt buộc.
             </span>
@@ -404,7 +534,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <td className="p-3 font-mono font-bold text-[#0c6296]">
                         {log.new_start_time} - {log.new_end_time}
                       </td>
-                      <td className="p-3 font-semibold text-rose-700 bg-rose-50 rounded">
+                      <td className="p-3 font-semibold text-rose-700 bg-rose-50 rounded border border-rose-200">
                         ⚠️ {log.reason}
                       </td>
                     </tr>
@@ -413,59 +543,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               </tbody>
             </table>
           </div>
-        </div>
-      )}
-
-      {/* TAB 3: ACCOUNTS OVERVIEW */}
-      {activeTab === 'usersList' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {usersList.map((u) => {
-            const userTasks = allTasks.filter((t) => t.user_username === u.username);
-            const userDone = userTasks.filter((t) => t.completed).length;
-            const pct = userTasks.length > 0 ? Math.round((userDone / userTasks.length) * 100) : 0;
-
-            return (
-              <div
-                key={u.username}
-                className="p-5 rounded-2xl border border-[#cce7f8] bg-[#f0f8fd]/50 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{u.avatar}</span>
-                      <div>
-                        <div className="font-extrabold text-slate-900 text-sm">{u.name}</div>
-                        <div className="text-xs text-[#0c6296] font-mono font-bold">@{u.username}</div>
-                      </div>
-                    </div>
-                    <span className="text-[10px] px-2 py-0.5 bg-white border border-[#b8e1f7] text-[#0c6296] rounded font-bold">
-                      {u.role}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 mt-4 pt-4 border-t border-[#cce7f8]">
-                    <div className="flex justify-between text-xs text-slate-600 font-semibold">
-                      <span>Tiến độ công việc hôm nay:</span>
-                      <span className="font-bold text-[#0c6296]">{userDone}/{userTasks.length} ({pct}%)</span>
-                    </div>
-                    <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-[#b8e1f7]">
-                      <div
-                        className="h-full bg-[#1b98e0] transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => onSelectUserFilter(u.username)}
-                  className="w-full mt-4 py-2 bg-white hover:bg-[#e0f2fe] text-[#0c6296] font-bold text-xs rounded-xl border border-[#b8e1f7] transition-all text-center"
-                >
-                  Xem lịch biểu của @{u.username}
-                </button>
-              </div>
-            );
-          })}
         </div>
       )}
     </div>
