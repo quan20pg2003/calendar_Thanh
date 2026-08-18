@@ -1,5 +1,8 @@
 node_modules
 server/node_modules
+server/auto_migrate_supabase.js
+server/migrate_supabase.js
+server/test_supabase_tasks.js
 dist
 .env
 .DS_Store
