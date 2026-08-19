@@ -2,23 +2,15 @@ import { Task, User } from '../types';
 
 export const HARDCODED_USERS: Record<string, { user: User; passwordHash: string }> = {
   admin: {
-    user: { username: 'admin', name: 'Quản Trị Viên (Admin)', avatar: '👑', role: 'Admin' },
+    user: { username: 'admin', name: 'Quản Trị Viên', avatar: '👑', role: 'Admin', status: 'active' },
     passwordHash: '123456',
   },
   thanhthanh: {
-    user: { username: 'thanhthanh', name: 'Thanh Thanh', avatar: '🌸', role: 'Personal' },
+    user: { username: 'thanhthanh', name: 'Thanh Thanh', avatar: '🌸', role: 'Personal', status: 'active' },
     passwordHash: '123456',
   },
   nhuyen: {
-    user: { username: 'nhuyen', name: 'Nhuyên', avatar: '💼', role: 'Work' },
-    passwordHash: '123456',
-  },
-  user1: {
-    user: { username: 'user1', name: 'Nguyễn Văn A (Lịch Cá Nhân)', avatar: '🏠', role: 'Personal' },
-    passwordHash: '123456',
-  },
-  user2: {
-    user: { username: 'user2', name: 'Trần Thị B (Lịch Công Việc)', avatar: '💼', role: 'Work' },
+    user: { username: 'nhuyen', name: 'Nhuyên', avatar: '💼', role: 'Work', status: 'active' },
     passwordHash: '123456',
   },
 };
@@ -70,74 +62,7 @@ export function getTasksForDate(username: string, dateStr: string): Task[] {
     if (raw) {
       return JSON.parse(raw);
     }
-    
-    // Seed initial tasks if empty for today
-    const todayStr = new Date().toISOString().split('T')[0];
-    if (dateStr === todayStr) {
-      const defaultTasks: Task[] = [
-        {
-          id: 'task-1',
-          title: 'Học tiếng Nhật',
-          startTime: '08:00',
-          endTime: '09:30',
-          category: 'study',
-          priority: 'urgentImportant',
-          completed: false,
-          recurringDays: [1, 3, 5],
-          date: dateStr,
-        },
-        {
-          id: 'task-2',
-          title: 'Tập thể dục buổi sáng',
-          startTime: '06:30',
-          endTime: '07:15',
-          category: 'health',
-          priority: 'importantNotUrgent',
-          completed: true,
-          actualStart: '06:30',
-          actualEnd: '07:15',
-          actualDuration: 45,
-          date: dateStr,
-        },
-        {
-          id: 'task-3',
-          title: 'Họp nhóm định kỳ',
-          startTime: '10:00',
-          endTime: '11:30',
-          category: 'work',
-          priority: 'urgentImportant',
-          completed: false,
-          date: dateStr,
-        },
-        {
-          id: 'task-4',
-          title: 'Nghỉ trưa & Ăn uống',
-          startTime: '12:00',
-          endTime: '13:00',
-          category: 'dining',
-          priority: 'neither',
-          completed: true,
-          actualStart: '12:10',
-          actualEnd: '13:05',
-          actualDuration: 55,
-          delayReason: 'Bữa trưa phục vụ chậm hơn dự kiến',
-          date: dateStr,
-        },
-        {
-          id: 'task-5',
-          title: 'Giải trí & Đọc sách',
-          startTime: '20:00',
-          endTime: '21:30',
-          category: 'entertainment',
-          priority: 'importantNotUrgent',
-          completed: false,
-          date: dateStr,
-        },
-      ];
-      localStorage.setItem(key, JSON.stringify(defaultTasks));
-      return defaultTasks;
-    }
-
+    // Return clean empty array without injecting any mock data
     return [];
   } catch {
     return [];

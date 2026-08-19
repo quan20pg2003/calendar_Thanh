@@ -24,6 +24,7 @@ export interface User {
   name: string;
   avatar: string;
   role: string;
+  status?: 'active' | 'inactive';
 }
 
 export type ViewMode = 'timeline' | 'week' | 'list';

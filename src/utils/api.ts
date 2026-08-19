@@ -2,7 +2,7 @@ import { Task, User } from '../types';
 import { supabase } from './supabase';
 
 export const api = {
-  // Login Authentication via Supabase Cloud DB
+  // Login Authentication via Supabase Cloud DB with Inactive Account Check
   login: async (username: string, passwordHash: string): Promise<User> => {
     try {
       const { data, error } = await supabase
@@ -19,15 +19,34 @@ export const api = {
         throw new Error('Mật khẩu không chính xác!');
       }
 
+      // Check account status active vs inactive
+      if (data.status === 'inactive') {
+        throw new Error('Tài khoản này đã bị khóa hoặc ngừng hoạt động! Vui lòng liên hệ Admin.');
+      }
+
       return {
         username: data.username,
         name: data.name,
         avatar: data.avatar,
         role: data.role,
+        status: data.status || 'active',
       };
     } catch (err: any) {
-      console.warn('Supabase Cloud DB login notice, falling back:', err.message);
+      console.warn('Supabase Cloud DB login notice:', err.message);
       throw err;
+    }
+  },
+
+  // Update User Account Status (Active / Inactive) by Admin
+  updateUserStatus: async (username: string, status: 'active' | 'inactive'): Promise<void> => {
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ status })
+        .eq('username', username);
+      if (error) throw error;
+    } catch (err: any) {
+      console.warn('Supabase updateUserStatus error:', err.message);
     }
   },
 
@@ -91,11 +110,9 @@ export const api = {
   // Reschedule Task via Drag & Drop with Reason in Supabase Cloud DB
   rescheduleTask: async (taskId: string, newStart: string, newEnd: string, reason: string): Promise<void> => {
     try {
-      // 1. Fetch old task
       const { data: oldTask } = await supabase.from('tasks').select('*').eq('id', taskId).single();
 
       if (oldTask) {
-        // 2. Insert into reschedule_logs
         await supabase.from('reschedule_logs').insert([
           {
             task_id: taskId,
@@ -109,7 +126,6 @@ export const api = {
         ]);
       }
 
-      // 3. Update task
       await supabase
         .from('tasks')
         .update({

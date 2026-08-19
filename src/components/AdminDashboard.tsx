@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Task, CATEGORY_CONFIG, PRIORITY_CONFIG } from '../types';
 import { supabase } from '../utils/supabase';
+import { api } from '../utils/api';
 import {
   Users,
   CheckCircle,
@@ -13,6 +14,9 @@ import {
   ShieldCheck,
   RefreshCw,
   AlertTriangle,
+  Lock,
+  Unlock,
+  Check,
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -46,30 +50,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [activeTab, setActiveTab] = useState<'usersList' | 'overview' | 'rescheduleLogs'>('usersList');
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   const fetchAdminData = async () => {
     setLoading(true);
     try {
+      // 1. Fetch all users from Supabase Cloud DB
       const { data: usersData } = await supabase.from('users').select('*');
-      if (usersData) {
+      if (usersData && usersData.length > 0) {
         setUsersList(
           usersData.map((u: any) => ({
             username: u.username,
             name: u.name,
             avatar: u.avatar,
             role: u.role,
+            status: u.status || 'active',
           }))
         );
       } else {
         setUsersList([
-          { username: 'thanhthanh', name: 'Thanh Thanh', avatar: '🌸', role: 'Personal' },
-          { username: 'nhuyen', name: 'Nhuyên', avatar: '💼', role: 'Work' },
-          { username: 'admin', name: 'Quản Trị Viên', avatar: '👑', role: 'Admin' },
-          { username: 'user1', name: 'Nguyễn Văn A', avatar: '🏠', role: 'Personal' },
-          { username: 'user2', name: 'Trần Thị B', avatar: '💼', role: 'Work' },
+          { username: 'admin', name: 'Quản Trị Viên', avatar: '👑', role: 'Admin', status: 'active' },
+          { username: 'thanhthanh', name: 'Thanh Thanh', avatar: '🌸', role: 'Personal', status: 'active' },
+          { username: 'nhuyen', name: 'Nhuyên', avatar: '💼', role: 'Work', status: 'active' },
         ]);
       }
 
+      // 2. Fetch all tasks for selected date
       const { data: tasksData } = await supabase
         .from('tasks')
         .select('*')
@@ -94,8 +100,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             delayReason: r.delay_reason,
           }))
         );
+      } else {
+        setAllTasks([]);
       }
 
+      // 3. Fetch reschedule logs
       const { data: logsData } = await supabase
         .from('reschedule_logs')
         .select('*')
@@ -104,6 +113,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
       if (logsData) {
         setRescheduleLogs(logsData);
+      } else {
+        setRescheduleLogs([]);
       }
     } catch (err) {
       console.warn('Admin fetch notice:', err);
@@ -116,6 +127,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     fetchAdminData();
   }, [selectedDate]);
 
+  // Compute analytics
   const totalTasks = allTasks.length;
   const completedTasks = allTasks.filter((t) => t.completed).length;
   const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -126,6 +138,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesUser && matchesSearch;
   });
+
+  // Toggle user account status (Active <-> Inactive)
+  const handleToggleUserStatus = async (targetUser: User) => {
+    const newStatus: 'active' | 'inactive' = targetUser.status === 'inactive' ? 'active' : 'inactive';
+    const actionText = newStatus === 'inactive' ? 'khóa (chuyển Inactive)' : 'kích hoạt lại (chuyển Active)';
+
+    if (window.confirm(`Bạn có chắc chắn muốn ${actionText} tài khoản @${targetUser.username}?`)) {
+      try {
+        await api.updateUserStatus(targetUser.username, newStatus);
+        setUsersList((prev) =>
+          prev.map((u) => (u.username === targetUser.username ? { ...u, status: newStatus } : u))
+        );
+        setStatusMessage(`Đã chuyển trạng thái tài khoản @${targetUser.username} sang ${newStatus.toUpperCase()} thành công!`);
+        setTimeout(() => setStatusMessage(''), 4000);
+      } catch (err: any) {
+        alert(`Lỗi cập nhật trạng thái: ${err.message}`);
+      }
+    }
+  };
 
   const getUserDelayStatus = (username: string) => {
     const userTasks = allTasks.filter((t) => t.user_username === username);
@@ -174,13 +205,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-extrabold text-slate-900">Giám Sát Tài Khoản Và Mức Độ Trì Hoãn</h2>
+              <h2 className="text-lg font-extrabold text-slate-900">Quản Lý Tài Khoản Và Trạng Thái Hệ Thống</h2>
               <span className="bg-[#e0f2fe] text-[#0c6296] text-[11px] font-bold px-2.5 py-0.5 rounded-full border border-[#b8e1f7]">
-                Quyền Quản Trị
+                Quyền Quản Trị Admin
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5 font-medium">
-              Theo dõi toàn bộ công việc, tỷ lệ hoàn thành và lý do đổi lịch của tất cả các tài khoản hệ thống.
+              Quản lý danh sách tài khoản, chuyển trạng thái Hoạt động/Ngừng hoạt động & theo dõi mức độ trì hoãn.
             </p>
           </div>
         </div>
@@ -195,6 +226,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         </button>
       </div>
 
+      {statusMessage && (
+        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2 text-emerald-800 text-xs font-bold shadow-xs">
+          <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+          <span>{statusMessage}</span>
+        </div>
+      )}
+
       {/* Analytics KPI Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="p-4 rounded-xl bg-[#f0f8fd] border border-[#b8e1f7] flex items-center gap-3">
@@ -203,7 +241,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
           <div>
             <div className="text-xs text-[#0c6296] font-bold">Tổng Tài Khoản</div>
-            <div className="text-xl font-extrabold text-slate-900">{usersList.length || 5}</div>
+            <div className="text-xl font-extrabold text-slate-900">{usersList.length}</div>
           </div>
         </div>
 
@@ -249,7 +287,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
-            👥 Danh Sách Tài Khoản Và Mức Độ Trì Hoãn
+            👥 Quản Lý Tài Khoản Và Trạng Thái (Active / Inactive)
           </button>
           <button
             onClick={() => setActiveTab('overview')}
@@ -283,29 +321,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             className="px-3 py-1.5 rounded-xl border border-[#b8e1f7] bg-[#f0f8fd] text-xs font-bold text-slate-800 focus:ring-2 focus:ring-[#1b98e0]"
           >
             <option value="all">🌐 Tất cả tài khoản • {allTasks.length} công việc</option>
-            <option value="thanhthanh">🌸 thanhthanh • Thanh Thanh</option>
-            <option value="nhuyen">💼 nhuyen • Nhuyên</option>
-            <option value="admin">👑 admin • Quản Trị Viên</option>
-            <option value="user1">🏠 user1 • Nguyễn Văn A</option>
-            <option value="user2">💼 user2 • Trần Thị B</option>
+            {usersList.map((u) => (
+              <option key={`filter-${u.username}`} value={u.username}>
+                {u.avatar} {u.username} • {u.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>
 
-      {/* TAB 1: ACCOUNTS LIST WITH DYNAMIC DELAY COLOR STATUS */}
+      {/* TAB 1: ACCOUNTS MANAGEMENT WITH ACTIVE / INACTIVE STATUS TOGGLE */}
       {activeTab === 'usersList' && (
         <div className="space-y-4">
-          <div className="p-4 bg-[#f0f8fd] rounded-xl border border-[#b8e1f7] flex items-center justify-between gap-4 text-xs font-semibold text-slate-800">
+          <div className="p-4 bg-[#f0f8fd] rounded-xl border border-[#b8e1f7] flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-slate-800">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-bold text-[#0c6296]">Mức độ trì hoãn:</span>
-              <span className="px-2 py-1 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
-                🟢 0 lần: Đúng tiến độ
+              <span className="font-bold text-[#0c6296]">Quản lý trạng thái tài khoản:</span>
+              <span className="px-2.5 py-1 rounded bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold flex items-center gap-1">
+                🟢 Active: Được phép đăng nhập & làm việc
               </span>
-              <span className="px-2 py-1 rounded bg-amber-100 text-amber-900 border border-amber-300 font-bold">
-                🟡 1 đến 2 lần: Cần chú ý
-              </span>
-              <span className="px-2 py-1 rounded bg-rose-100 text-rose-900 border border-rose-300 font-extrabold">
-                🔴 Trên 3 lần: Trì hoãn nhiều
+              <span className="px-2.5 py-1 rounded bg-rose-100 text-rose-800 border border-rose-300 font-bold flex items-center gap-1">
+                🔴 Inactive: Bị khóa, không thể đăng nhập
               </span>
             </div>
           </div>
@@ -315,19 +350,30 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               const userTasks = allTasks.filter((t) => t.user_username === u.username);
               const userDone = userTasks.filter((t) => t.completed).length;
               const pct = userTasks.length > 0 ? Math.round((userDone / userTasks.length) * 100) : 0;
-              const status = getUserDelayStatus(u.username);
+              const statusInfo = getUserDelayStatus(u.username);
+              const isInactive = u.status === 'inactive';
 
               return (
                 <div
                   key={u.username}
-                  className={`p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-xs ${status.cardBg}`}
+                  className={`p-5 rounded-2xl border transition-all flex flex-col justify-between shadow-xs ${
+                    isInactive ? 'bg-slate-100/90 border-slate-300 opacity-80' : statusInfo.cardBg
+                  }`}
                 >
                   <div>
+                    {/* Header Account Info */}
                     <div className="flex items-start justify-between mb-3 gap-2">
                       <div className="flex items-center gap-3">
                         <span className="text-3xl">{u.avatar}</span>
                         <div>
-                          <div className="font-extrabold text-slate-900 text-base">{u.name}</div>
+                          <div className="font-extrabold text-slate-900 text-base flex items-center gap-1.5">
+                            <span>{u.name}</span>
+                            {isInactive && (
+                              <span className="text-[10px] bg-rose-600 text-white font-extrabold px-1.5 py-0.5 rounded">
+                                BỊ KHÓA
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-[#0c6296] font-mono font-bold">@{u.username}</div>
                         </div>
                       </div>
@@ -336,12 +382,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </span>
                     </div>
 
-                    <div className="mt-3 mb-4">
-                      <span className={`text-xs px-3 py-1.5 rounded-xl border flex items-center gap-1.5 w-fit ${status.badgeBg}`}>
-                        <span>{status.label}</span>
+                    {/* Status Active/Inactive Badge */}
+                    <div className="flex items-center gap-2 mt-3 mb-4">
+                      {isInactive ? (
+                        <span className="text-xs px-3 py-1 rounded-xl bg-rose-100 text-rose-800 border border-rose-300 font-extrabold flex items-center gap-1">
+                          <Lock className="w-3.5 h-3.5 text-rose-600" />
+                          🔴 Ngừng hoạt động (Inactive)
+                        </span>
+                      ) : (
+                        <span className="text-xs px-3 py-1 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold flex items-center gap-1">
+                          <Unlock className="w-3.5 h-3.5 text-emerald-600" />
+                          🟢 Hoạt động (Active)
+                        </span>
+                      )}
+
+                      <span className={`text-[11px] px-2.5 py-1 rounded-xl border ${statusInfo.badgeBg}`}>
+                        {statusInfo.level === 'good' ? '🟢 0 trì hoãn' : statusInfo.level === 'warning' ? `🟡 ${statusInfo.delayCount} trì hoãn` : `🔴 ${statusInfo.delayCount} trì hoãn`}
                       </span>
                     </div>
 
+                    {/* Task Counts Summary */}
                     <div className="space-y-2 pt-3 border-t border-[#cce7f8]">
                       <div className="flex justify-between text-xs text-slate-700 font-semibold">
                         <span>Số lượng công việc hôm nay:</span>
@@ -353,26 +413,51 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       </div>
                       <div className="flex justify-between text-xs text-slate-700 font-semibold">
                         <span>Số lần trì hoãn hoặc đổi giờ:</span>
-                        <span className={`font-bold ${status.delayCount > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
-                          {status.delayCount} lần
+                        <span className={`font-bold ${statusInfo.delayCount > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+                          {statusInfo.delayCount} lần
                         </span>
                       </div>
 
+                      {/* Progress Bar */}
                       <div className="w-full h-2.5 bg-white rounded-full overflow-hidden border border-[#b8e1f7] mt-2">
                         <div
-                          className={`h-full transition-all ${status.progressColor}`}
+                          className={`h-full transition-all ${statusInfo.progressColor}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => onSelectUserFilter(u.username)}
-                    className="w-full mt-5 py-2.5 bg-white hover:bg-[#e0f2fe] text-[#0c6296] font-bold text-xs rounded-xl border border-[#b8e1f7] transition-all text-center active:scale-95 shadow-xs"
-                  >
-                    Xem chi tiết lịch biểu của @{u.username}
-                  </button>
+                  {/* Admin Action Buttons */}
+                  <div className="space-y-2 mt-5 pt-3 border-t border-[#cce7f8]">
+                    <button
+                      onClick={() => handleToggleUserStatus(u)}
+                      className={`w-full py-2 px-3 font-bold text-xs rounded-xl border transition-all text-center flex items-center justify-center gap-1.5 active:scale-95 shadow-xs ${
+                        isInactive
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700'
+                          : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-300'
+                      }`}
+                    >
+                      {isInactive ? (
+                        <>
+                          <Unlock className="w-3.5 h-3.5" />
+                          <span>Kích hoạt lại tài khoản (Active)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-3.5 h-3.5" />
+                          <span>Khóa tài khoản (Chuyển Inactive)</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => onSelectUserFilter(u.username)}
+                      className="w-full py-2 bg-white hover:bg-[#e0f2fe] text-[#0c6296] font-bold text-xs rounded-xl border border-[#b8e1f7] transition-all text-center active:scale-95 shadow-xs"
+                    >
+                      Xem chi tiết lịch biểu của @{u.username}
+                    </button>
+                  </div>
                 </div>
               );
             })}
